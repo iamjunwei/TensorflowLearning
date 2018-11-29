@@ -75,3 +75,35 @@ def time_function(f, *args):
 print("Two loop cost: ", time_function(classifier.compute_distances_two_loops, X_test))
 print("One loop cost: ", time_function(classifier.compute_distances_one_loop, X_test))
 print("No loop cost: ", time_function(classifier.compute_distances_no_loops, X_test))
+
+num_folds = 5
+k_choices = [1, 3, 5, 8, 10, 12, 15, 20, 50, 100]
+X_train_folds = np.array_split(X_train, num_folds)
+y_train_folds = np.array_split(y_train, num_folds)
+k_to_accuracies = {}
+classifier = KNearestNeighbor()
+for k in k_choices:
+    accuracies = np.zeros(num_folds)
+    for fold in xrange(num_folds):
+        temp_X = X_train_folds[:]
+        temp_y = y_train_folds[:]
+        X_validation_fold = temp_X.pop(fold)
+        y_validation_fold = temp_y.pop(fold)
+        temp_X = np.array([y for x in temp_X for y in x])
+        temp_y = np.array([y for x in temp_y for y in x])
+        classifier.train(temp_X, temp_y)
+        y_validation_pred = classifier.predict(X_validation_fold, k=k)
+        num_correct = np.sum(y_validation_pred == y_validation_fold)
+        accuracies[fold] = float(num_correct) / len(y_validation_fold)
+    k_to_accuracies[k] = accuracies
+for k in sorted(k_to_accuracies):
+    for accuracy in k_to_accuracies[k]:
+        print("k = %d, accuracy = %f" % (k, accuracy))
+
+best_k = 10
+classifier = KNearestNeighbor()
+classifier.train(X_train, y_train)
+y_test_pred = classifier.predict(X_test, k=best_k)
+num_correct = np.sum(y_test_pred == y_test)
+accuracy = float(num_correct ) / len(y_test)
+print("Got %d / %d correct => accuracy: %f" % (num_correct, len(y_test), accuracy))

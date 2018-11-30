@@ -78,9 +78,7 @@ def svm_loss_vectorized(W, X, y, reg):
   num_train = X.shape[0]
 
   scores_correct = scores[np.arange(num_train), y]
-  print(scores_correct.shape)
   scores_correct = np.reshape(scores_correct, (num_train, -1))
-  print(scores_correct.shape)
   margins = scores - scores_correct + 1
   margins = np.maximum(0, margins)
   margins[np.arange(num_train), y] = 0

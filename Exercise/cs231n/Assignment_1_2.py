@@ -4,8 +4,10 @@ import numpy as np
 from Exercise.cs231n.cs231n_assignment.cs231n.data_utils import load_CIFAR10
 from Exercise.cs231n.cs231n_assignment.cs231n.classifiers.linear_svm import svm_loss_naive, svm_loss_vectorized
 from Exercise.cs231n.cs231n_assignment.cs231n.gradient_check import grad_check_sparse
+from Exercise.cs231n.cs231n_assignment.cs231n.classifiers import LinearSVM
 import matplotlib.pyplot as plt
 import time
+import math
 
 cifar10_dir = "./cs231n_assignment/cs231n/datasets/cifar-10-batches-py"
 X_train, y_train, X_test, y_test = load_CIFAR10(cifar10_dir)
@@ -89,3 +91,47 @@ tic = time.time()
 loss_vectorized, grad_vectorized = svm_loss_vectorized(W, X_dev, y_dev, 0.000005)
 toc = time.time()
 print("Vectorized loss: %e computed in %fs" % (loss_vectorized, toc - tic))
+print("Difference loss: %f" % (loss_naive - loss_vectorized,))
+print("Difference grad: %f" % (np.linalg.norm(grad_naive - grad_vectorized, ord="fro"),))
+
+svm = LinearSVM()
+tic = time.time()
+loss_hist = svm.train(X_train, y_train, learning_rate=1e-7, reg=2.5e4, num_iters=1500, verbose=True)
+toc = time.time()
+print("Training took %fs" % (toc - tic,))
+plt.plot(loss_hist)
+plt.xlabel("Iteration number")
+plt.ylabel("Loss value")
+plt.show()
+
+y_train_pred = svm.predict(X_train)
+print("training accuracy %f" % (np.mean(y_train_pred == y_train),))
+y_val_pred = svm.predict(X_val)
+print("validation accuracy %f" % (np.mean(y_val_pred == y_val),))
+
+# optimize learning_rate and regularization
+learning_rates = [2e-7, 0.75e-7, 1.5e-7, 1.25e-7, 0.75e-7]
+regularization_strengths = [3e4, 3.24e4, 3.5e4, 3.75e4, 4e4, 4.25e4, 4.5e4, 4.75e4, 5.0e4]
+result = {}
+best_val = -1
+best_svm = None
+for rate in learning_rates:
+    for strength in regularization_strengths:
+        svm = LinearSVM()
+        svm.train(X_train, y_train, learning_rate=rate, reg=strength, num_iters=1500, verbose=True)
+        y_train_pred = svm.predict(X_train)
+        accuracy_train = np.mean(y_train_pred == y_train)
+        y_val_pred = svm.predict(X_val)
+        accuracy_val = np.mean(y_val_pred == y_val)
+        result[(rate, strength)] = (accuracy_train, accuracy_val)
+        if best_val < accuracy_val:
+            best_val = accuracy_val
+            best_svm = svm
+for lr, reg in sorted(result):
+    accuracy_train, accuracy_val = result[(lr, reg)]
+    print("lr %e, reg %e, training acc %f, val acc %f" % (lr, reg, accuracy_train, accuracy_val))
+print("best acc %f" % (best_val, ))
+
+y_test_pred = best_svm.predict(X_test)
+accuracy_test = np.mean(y_test_pred == y_test)
+print("Test acc: %f" % (accuracy_test, ))

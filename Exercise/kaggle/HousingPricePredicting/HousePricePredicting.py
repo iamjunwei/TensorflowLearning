@@ -1,4 +1,3 @@
-import os
 import tensorflow as tf
 import pandas as pd
 from sklearn.ensemble import IsolationForest
@@ -36,15 +35,15 @@ col_train = list(train.columns)
 col_train_bis = list(train.columns)
 col_train_bis.remove("SalePrice")
 mat_train = np.matrix(train)
-mat_test  = np.matrix(test)
-mat_new = np.matrix(train.drop('SalePrice',axis = 1))
-mat_y = np.array(train.SalePrice).reshape((1314,1))
+mat_test = np.matrix(test)
+mat_new = np.matrix(train.drop('SalePrice', axis=1))
+mat_y = np.array(train.SalePrice).reshape((1314, 1))
 prepro_y = MinMaxScaler()
 prepro_y.fit(mat_y)
 prepro = MinMaxScaler()
 prepro.fit(mat_train)
 prepro_test = MinMaxScaler()
-prepro_test.fit(mat_test)
+prepro_test.fit(mat_new)
 train = pd.DataFrame(prepro.transform(mat_train), columns=col_train)
 test = pd.DataFrame(prepro_test.transform(mat_test), columns=col_train_bis)
 print(train.shape)
@@ -56,7 +55,8 @@ LABEL = "SalePrice"
 feature_cols = [tf.contrib.layers.real_valued_column(k) for k in FEATURES]
 training_set = train[COLUMNS]
 prediction_set = train[LABEL]
-x_train, x_test, y_train, y_test = train_test_split(training_set[FEATURES], prediction_set, test_size=0.33, random_state=42)
+x_train, x_test, y_train, y_test = train_test_split(training_set[FEATURES],
+                                                    prediction_set, test_size=0.33, random_state=42)
 y_train = pd.DataFrame(y_train, columns=[LABEL])
 training_set = pd.DataFrame(x_train, columns=FEATURES).merge(y_train, left_index=True, right_index=True)
 print(training_set.shape)
@@ -83,17 +83,18 @@ def input_fn(data_set, pred=False):
         return feature_cols
 
 
-regressor.fit(input_fn=lambda : input_fn(training_set), steps=2000)
-ev = regressor.evaluate(input_fn=lambda : input_fn(testing_set), steps=1)
-loss_score1 = ev["loss"]
-print("Final Loss on the testing set: {0:f}".format(loss_score1))
-y = regressor.predict(input_fn=lambda :input_fn(testing_set))
+regressor.fit(input_fn=lambda: input_fn(training_set), steps=2000)
+ev = regressor.evaluate(input_fn=lambda: input_fn(testing_set), steps=1)
+loss_score = ev["loss"]
+print("Final Loss on the testing set: {0:f}".format(loss_score))
+y = regressor.predict(input_fn=lambda: input_fn(testing_set))
 predictions = list(itertools.islice(y, testing_set.shape[0]))
 print(list(np.round(predictions, 8)))
 print(list(np.round(y_test["SalePrice"], 8)))
 
 # prediction and submission
-predictions = pd.DataFrame(prepro_y.inverse_transform(np.array(predictions).reshape(y_test.shape[0], 1)), columns=["Prediction"])
+predictions = pd.DataFrame(prepro_y.inverse_transform(np.array(predictions).reshape(y_test.shape[0], 1)),
+                           columns=["Prediction"])
 reality = pd.DataFrame(prepro.inverse_transform(testing_set), columns=[COLUMNS]).SalePrice
 matplotlib.rc('xtick', labelsize=12)
 matplotlib.rc('ytick', labelsize=12)
@@ -102,18 +103,19 @@ fig, ax = plt.subplots(figsize=(10, 8))
 
 plt.style.use('ggplot')
 plt.plot(predictions.values, reality.values, 'ro')
-plt.xlabel('Predictions', fontsize = 12)
-plt.ylabel('Reality', fontsize = 12)
-plt.title('Predictions x Reality on dataset Test', fontsize = 12)
+plt.xlabel('Predictions', fontsize=12)
+plt.ylabel('Reality', fontsize=12)
+plt.title('Predictions x Reality on dataset Test', fontsize=12)
 ax.plot([reality.min(), reality.max()], [reality.min(), reality.max()], 'k--', lw=4)
 plt.show()
 
-y_predict = regressor.predict(input_fn=lambda :input_fn(test, pred=True))
+y_predict = regressor.predict(input_fn=lambda: input_fn(test, pred=True))
 
 
 def to_submit(pred_y, name_out):
     y_predict = list(itertools.islice(pred_y, test.shape[0]))
-    y_predict = pd.DataFrame(prepro_y.inverse_transform(np.array(y_predict).reshape(test.shape[0], 1)), columns=["Prediction"])
+    y_predict = pd.DataFrame(prepro_y.inverse_transform(np.array(y_predict).reshape(test.shape[0], 1)),
+                             columns=["Prediction"])
     y_predict = y_predict.join(ID)
     y_predict.to_csv(name_out + ".csv", index=False)
 

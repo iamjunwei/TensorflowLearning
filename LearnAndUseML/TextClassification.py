@@ -27,7 +27,7 @@ def decode_review(text):
 print(decode_review(train_data[0]))
 
 # make input data the same size
-# Ont-hot-encoding or padding
+# one-hot-encoding or padding
 # choose padding
 train_data = keras.preprocessing.sequence.pad_sequences(train_data,
                                                         value=word_index["<PAD>"],

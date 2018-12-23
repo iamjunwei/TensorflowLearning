@@ -107,4 +107,12 @@ model.save('my_model.h5')
 # Recreate the exact same model, including weights and optimizer.
 model = keras.models.load_model('my_model.h5')
 
+# Keras 支持 EagerExecution
 
+# Keras model 可转换成Estimator tf.keras.estimator.model_to_estimator(model)
+
+# 分布式训练
+# first，create a keras model
+# second, create a estimator RunConfig from MirroredStrategy
+# third, convert keras model to estimator
+# fourth, estimator train with dataset input function

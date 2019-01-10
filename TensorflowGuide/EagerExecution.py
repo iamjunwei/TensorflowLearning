@@ -143,8 +143,18 @@ for (i, (x, y)) in enumerate(dataset_train):
 # specify run on gpu
 # with tf.device("/gpu:0"): ...
 
-# eager execution: better debugging performance
-# graph execution: better training distribution performance
+# eager execution: better debugging and interactive performance
+# graph execution: better distribution-training and deploy performance
 # also, we can save checkpoints in eager execution and use it again in graph execution
 
 # tfe.py_func: eager execution in graph execution environment
+def my_py_func(x):
+    x = tf.matmul(x, x)  # You can use tf ops
+    print(x)  # but it's eager!
+    return x
+
+with tf.Session() as sess:
+    x = tf.placeholder(dtype=tf.float32)
+    # Call eager function in graph!
+    pf = tfe.py_func(my_py_func, [x], tf.float32)
+    sess.run(pf, feed_dict={x: [[2.0]]})  # [[4.0]]

@@ -91,7 +91,9 @@ with tf.Session() as sess4:
     # `training_dataset` or `validation_dataset` here, because they have
     # identical structure.
     handle = tf.placeholder(tf.string, shape=[])
-    iterator = tf.data.Iterator.from_string_handle(handle, training_dataset.output_types, training_dataset.output_shapes)
+    iterator = tf.data.Iterator.from_string_handle(handle,
+                                                   training_dataset.output_types,
+                                                   training_dataset.output_shapes)
     next_element = iterator.get_next()
     # You can use feedable iterators with a variety of different kinds of iterator
     # (such as one-shot and initializable iterators).
@@ -138,7 +140,7 @@ with tf.Session as sess7:
     dataset = tf.data.Dataset.from_tensor_slices((features_placeholder, labels_placeholder))
     iterator = dataset.make_initializable_iterator()
     sess7.run(iterator.initializer, feed_dict={features_placeholder: features,
-                                              labels_placeholder: labels})
+                                               labels_placeholder: labels})
 
 # 读取文本数据
 filenames = ["/var/data/file1.txt", "/var/data/file2.txt"]
@@ -152,7 +154,7 @@ dataset_text = dataset.flat_map(
 # 读取csv数据
 filenames = ["/var/data/file1.csv", "/var/data/file2.csv"]
 record_defaults = [[0.0]] * 2  # Only provide defaults for the selected columns
-dataset_csv = tf.contrib.data.CsvDataset(filenames, record_defaults, header=True, select_cols=[2,4])
+dataset_csv = tf.contrib.data.CsvDataset(filenames, record_defaults, header=True, select_cols=[2, 4])
 
 # 读取TFRecord数据
 with tf.Session() as sess8:
@@ -164,3 +166,12 @@ with tf.Session() as sess8:
     validation_filenames = ["/var/data/validation1.tfrecord", ...]
     sess8.run(iterator.initializer, feed_dict={filenames: validation_filenames})
 
+# dataset.map(some_function)，some_function若包含非tensorflow操作，最好使用tf.py_func包装一下
+
+# dataset.batch：批量组合元素，元素之间shape相同
+# dataset.padded_batch：批量组合元素，元素之间shape可以不同，使用特定值填充缺失维度
+
+dataset.repeat(count=10)  # count设置数据集的重复次数，无参数或者None表示无限循环，在数据重新开始时，不会收到通知
+dataset.shuffle(buffer_size=10000)  # 维护一个缓冲区，从缓冲区随机选择一个数据
+
+# 高阶API，MonitoredTrainingSession，使用sess.should_stop判断数据集是否结束

@@ -29,6 +29,7 @@ parser.add_argument('--train_steps', default=1000, type=int,
 
 
 # key point: create custom net structure
+# EstimatorSpec
 def my_model(features, labels, mode, params):
     """DNN with three hidden layers and learning_rate=0.1."""
     # Create three fully connected layers.
